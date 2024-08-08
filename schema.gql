@@ -9,7 +9,7 @@ type UserType {
 }
 
 type UserLoginType {
-  access_token: String!
+  access_token: String
 }
 
 type TaskType {
@@ -17,8 +17,8 @@ type TaskType {
   name: String!
   description: String!
   user: UserType!
-  created_at: DateTime!
-  updated_at: DateTime!
+  created: DateTime!
+  updated: DateTime!
 }
 
 """
@@ -28,13 +28,13 @@ scalar DateTime
 
 type Query {
   getTasks: [TaskType!]!
-  getTask(id: Float!): TaskType!
+  getTask(id: String!): TaskType!
   myTasks: [TaskType!]!
 }
 
 type Mutation {
   login(username: String!, password: String!): UserLoginType!
-  createTask(name: String!, description: String!, userId: Float!): TaskType!
+  createTask(name: String!, description: String!): TaskType!
   updateTask(id: Float!, name: String, description: String): TaskType!
   deleteTask(id: Float!): Boolean!
 }

@@ -14,7 +14,7 @@ export class UserType {
 
 @ObjectType()
 export class UserLoginType {
-  @Field()
+  @Field({ nullable: true })
   access_token: string;
 }
 
@@ -33,8 +33,8 @@ export class TaskType {
   user: UserType; // Adjust if needed
 
   @Field()
-  created_at: Date;
+  created: Date;
 
   @Field()
-  updated_at: Date;
+  updated: Date;
 }

@@ -3,15 +3,25 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserModel } from '../db/models/user.model';
+import { User, UserDocument } from '../db/models/user.model';
 import * as bcrypt from 'bcrypt';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class UsersService {
-  constructor() {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async findUserByUsername(username: string): Promise<any> {
-    const user = await UserModel.query().where('username', username).first();
+    const user = await this.userModel.findOne({ username });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
+  async findUserByID(userId: string): Promise<any> {
+    const user = await this.userModel.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -33,10 +43,10 @@ export class UsersService {
     role: 'admin' | 'manager' | 'user',
   ): Promise<any> {
     const hashedPassword = await bcrypt.hash(password, 10);
-    return UserModel.query().insert({
+    return new this.userModel({
       username,
       password: hashedPassword,
       role,
-    });
+    }).save();
   }
 }
