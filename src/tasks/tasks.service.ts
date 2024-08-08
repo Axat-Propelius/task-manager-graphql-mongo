@@ -1,62 +1,65 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { TaskModel } from '../db/models/task.model';
-import { UserModel } from '../db/models/user.model';
+import { Task, TaskDocument } from '../db/models/task.model';
+import { User, UserDocument } from '../db/models/user.model';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class TasksService {
-  async getAllTasks(): Promise<TaskModel[]> {
-    return TaskModel.query().withGraphFetched('user');
+  constructor(
+    @InjectModel(Task.name) private taskModel: Model<TaskDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+  ) {}
+
+  async getAllTasks(): Promise<TaskDocument[]> {
+    return this.taskModel.find().populate('user');
   }
 
-  async getTaskById(id: number): Promise<TaskModel> {
-    const task = await TaskModel.query().findById(id).withGraphFetched('user');
+  async getTaskById(id: string): Promise<TaskDocument> {
+    const task = await this.taskModel.findById(id).populate('user');
     if (!task) {
       throw new NotFoundException('Task not found');
     }
     return task;
   }
 
-  async getTasksByUser(username: string): Promise<TaskModel[]> {
-    const user = await UserModel.query().where('username', username).first();
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    return TaskModel.query().where('userId', user.id).withGraphFetched('user');
+  async getTasksByUser(userId: string): Promise<TaskDocument[]> {
+    return this.taskModel.find({ user: userId }).populate('user');
   }
 
   async createTask(
     name: string,
     description: string,
-    userId: number,
-  ): Promise<TaskModel> {
-    return TaskModel.query().insert({
+    userId: string,
+  ): Promise<TaskDocument> {
+    return new this.taskModel({
       name,
       description,
-      userId,
-    });
+      user: userId,
+    }).save();
   }
 
   async updateTask(
     id: number,
     name?: string,
     description?: string,
-  ): Promise<TaskModel> {
-    const task = await TaskModel.query().findById(id);
+  ): Promise<TaskDocument> {
+    const task = await this.taskModel.findById(id);
     if (!task) {
       throw new NotFoundException('Task not found');
     }
-    return TaskModel.query().patchAndFetchById(id, {
+    return this.taskModel.findByIdAndUpdate(id, {
       name,
       description,
     });
   }
 
   async deleteTask(id: number): Promise<boolean> {
-    const task = await TaskModel.query().findById(id);
+    const task = await this.taskModel.findById(id);
     if (!task) {
       throw new NotFoundException('Task not found');
     }
-    await TaskModel.query().deleteById(id);
+    await this.taskModel.findByIdAndDelete(id);
     return true;
   }
 }
