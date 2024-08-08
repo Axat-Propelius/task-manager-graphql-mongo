@@ -25,7 +25,6 @@ export class TaskModel extends Model {
   }
 
   static relationMappings() {
-    // const { UserModel } = require('src/db/models/user.model');
     const { UserModel } = require('./user.model');
     return {
       user: {
